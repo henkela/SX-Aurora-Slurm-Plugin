@@ -3,6 +3,7 @@ gres_plugin for Slurm
 It allows for scheduling whole aurora cards on nodes using gres in Slurm but not to share one aurora between jobs. 
 
 Checkout https://github.com/henkela/SX-Aurora-Slurm-Plugin/releases for the latest release. 
+This has not yet been tested on 18.08.xx.
 
 ## Getting started
 ### Compiling 
