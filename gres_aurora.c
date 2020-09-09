@@ -39,7 +39,7 @@
 #include "src/common/env.h"
 #include "src/common/gres.h"
 #include "src/common/list.h"
-#include "src/common/xcgroup_read_config.c"
+#include "src/common/xcgroup_read_config.h"
 #include "src/common/xstring.h"
 
 #include "../common/gres_common.h"
@@ -72,18 +72,28 @@
 const char	plugin_name[]		= "Gres Aurora plugin";
 const char	plugin_type[]		= "gres/aurora";
 const uint32_t	plugin_version		= SLURM_VERSION_NUMBER;
-
 static char	gres_name[]		= "aurora";
-
 static List gres_devices = NULL;
+
+extern void step_hardware_init(bitstr_t *usable_auroras, char *tres_setting)
+{
+//	gpu_g_step_hardware_init(usable_gpus, tres_freq);
+//	Maybe we can set at this point the numa mode of the VE(s)
+	debug("%s: %s TODO: implement functionality", __func__, plugin_name);
+}
+
+extern void step_hardware_fini(void)
+{
+//	gpu_g_step_hardware_fini();
+	debug("%s: %s TODO: implement functionality", __func__, plugin_name);
+}
 
 static void _set_env(char ***env_ptr, void *gres_ptr, int node_inx,
 		     bitstr_t *usable_gres,
 		     bool *already_seen, int *local_inx,
 		     bool reset, bool is_job)
 {
-	char *global_list = NULL, *local_list = NULL;
-	char *slurm_env_var = NULL;
+	char *global_list = NULL, *local_list = NULL, *slurm_env_var = NULL;
 
 	if (is_job)
 			slurm_env_var = "SLURM_JOB_AURORAS";
@@ -97,9 +107,9 @@ static void _set_env(char ***env_ptr, void *gres_ptr, int node_inx,
 	}
 
 	common_gres_set_env(gres_devices, env_ptr, gres_ptr, node_inx,
-			    usable_gres, "", local_inx,
+			    usable_gres, "", local_inx, NULL,
 			    &local_list, &global_list,
-			    reset, is_job);
+			    reset, is_job, NULL);
 
 	if (global_list) {
 		env_array_overwrite(env_ptr, slurm_env_var, global_list);
@@ -135,7 +145,7 @@ extern int fini(void)
  * This only validates that the configuration was specified in gres.conf.
  * In the general case, no code would need to be changed.
  */
-extern int node_config_load(List gres_conf_list)
+extern int node_config_load(List gres_conf_list, node_config_load_t *node_config)
 {
 	int rc = SLURM_SUCCESS;
 
@@ -226,4 +236,41 @@ extern int step_info(gres_step_state_t *step_gres_data, uint32_t node_inx,
 extern List get_devices(void)
 {
 	return gres_devices;
+}
+
+/*
+ * Build record used to set environment variables as appropriate for a job's
+ * prolog or epilog based GRES allocated to the job.
+ */
+extern gres_epilog_info_t *epilog_build_env(gres_job_state_t *gres_job_ptr)
+{
+	int i;
+	gres_epilog_info_t *epilog_info;
+
+	epilog_info = xmalloc(sizeof(gres_epilog_info_t));
+	epilog_info->node_cnt = gres_job_ptr->node_cnt;
+	epilog_info->gres_bit_alloc = xcalloc(epilog_info->node_cnt,
+					      sizeof(bitstr_t *));
+	for (i = 0; i < epilog_info->node_cnt; i++) {
+		if (gres_job_ptr->gres_bit_alloc &&
+		    gres_job_ptr->gres_bit_alloc[i]) {
+			epilog_info->gres_bit_alloc[i] =
+				bit_copy(gres_job_ptr->gres_bit_alloc[i]);
+		}
+	}
+
+	debug("%s: %s TODO: check functionality", __func__, plugin_name);
+
+	return epilog_info;
+}
+
+/*
+ * Set environment variables as appropriate for a job's prolog or epilog based
+ * GRES allocated to the job.
+ */
+extern void epilog_set_env(char ***epilog_env_ptr,
+			   gres_epilog_info_t *epilog_info, int node_inx)
+{
+	debug("%s: %s TODO: implement functionality", __func__, plugin_name);
+	return;
 }
